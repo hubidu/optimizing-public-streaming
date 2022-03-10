@@ -11,6 +11,7 @@ def _parse_bool(val: Union[str, bool]) -> bool:  # pylint: disable=E1136
 
 
 class AppConfig:
+    POSTGRES_HOST: str = 'postgres:5432'
     KAFKA_BOOTSTRAP_SERVERS: str = 'localhost:9092'
     KAFKA_SCHEMA_REGISTRY_URL: str = 'http://localhost:8081'
 
