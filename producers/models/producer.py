@@ -49,7 +49,7 @@ class Producer:
     def create_topic(self, topic_name):
         """Creates the producer topic if it does not already exist"""
         admin_client = AdminClient({
-            "bootstrap.servers": os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+            "bootstrap.servers": Config.KAFKA_BOOTSTRAP_SERVERS
         })
         admin_client.create_topics([NewTopic(
             topic_name, num_partitions=self.num_partitions, replication_factor=self.num_replicas)])
@@ -62,7 +62,6 @@ class Producer:
         """Prepares the producer for exit by cleaning up the producer"""
         self.producer.flush()
 
-        self.producer.close()
         logger.info("producer has been closed")
 
     def time_millis(self):
