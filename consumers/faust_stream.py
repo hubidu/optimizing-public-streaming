@@ -3,11 +3,11 @@ import logging
 
 import faust
 
-
 logger = logging.getLogger(__name__)
 
-
 # Faust will ingest records from Kafka in this format
+
+
 class Station(faust.Record):
     stop_id: int
     direction_id: str
@@ -29,29 +29,36 @@ class TransformedStation(faust.Record):
     line: str
 
 
-# TODO: Define a Faust Stream that ingests data from the Kafka Connect stations topic and
-#   places it into a new topic with only the necessary information.
-app = faust.App("stations-stream", broker="kafka://localhost:9092", store="memory://")
-# TODO: Define the input Kafka Topic. Hint: What topic did Kafka Connect output to?
-# topic = app.topic("TODO", value_type=Station)
-# TODO: Define the output Kafka Topic
-# out_topic = app.topic("TODO", partitions=1)
-# TODO: Define a Faust Table
-#table = app.Table(
-#    # "TODO",
-#    # default=TODO,
-#    partitions=1,
-#    changelog_topic=out_topic,
-#)
+app = faust.App("stations-stream",
+                broker="kafka://localhost:9092", store="memory://")
+stations_topic = app.topic("cta.db.stations", value_type=Station)
+transformed_stations_topic = app.topic(
+    "cta.db.stations_transformed", partitions=1, value_type=TransformedStation)
+
+# TODO: Why should I use a table here?
+# table = app.Table(
+#     "transformed_stations",
+#     # default=TODO,
+#     partitions=1,
+#     changelog_topic=transformed_stations_topic,
+# )
 
 
-#
-#
-# TODO: Using Faust, transform input `Station` records into `TransformedStation` records. Note that
-# "line" is the color of the station. So if the `Station` record has the field `red` set to true,
-# then you would set the `line` of the `TransformedStation` record to the string `"red"`
-#
-#
+@app.agent(stations_topic)
+async def map_stations(stations):
+    def map_colors_to_line(red: bool, blue: bool, green: bool):
+        if (red):
+            return 'red'
+        if (blue):
+            return 'blue'
+        if (green):
+            return 'green'
+
+    async for station in stations:
+        await transformed_stations_topic.send(value=TransformedStation(
+            station_id=station.station_id, station_name=station.station_name,
+            order=station.order, line=map_colors_to_line(station.red, station.blue, station.green))
+        )
 
 
 if __name__ == "__main__":
