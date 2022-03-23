@@ -16,7 +16,7 @@ KSQL_STATEMENT = """
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE turnstile (
-    station_id bigint,
+    station_id varchar,
     station_name varchar,
     line integer
 ) WITH (
@@ -26,11 +26,14 @@ CREATE TABLE turnstile (
 );
 
 CREATE TABLE turnstile_summary 
-WITH (value_format='json')
+WITH (
+    kafka_topic='cta.turnstiles-summary',
+    value_format='json'
+)
 AS
-    SELECT station_id, count(*) as count
+    SELECT station_id, station_name, count(*) as count
     FROM turnstile
-    GROUP BY station_id 
+    GROUP BY station_id, station_name
 ;
 """
 
