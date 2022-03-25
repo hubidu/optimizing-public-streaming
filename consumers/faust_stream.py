@@ -31,17 +31,17 @@ class TransformedStation(faust.Record):
 
 app = faust.App("stations-stream",
                 broker="kafka://localhost:9092", store="memory://")
+
 stations_topic = app.topic("cta.db.stations", value_type=Station)
 transformed_stations_topic = app.topic(
     "cta.db.stations_transformed", partitions=1, value_type=TransformedStation)
 
-# TODO: Why should I use a table here?
-# table = app.Table(
-#     "transformed_stations",
-#     # default=TODO,
-#     partitions=1,
-#     changelog_topic=transformed_stations_topic,
-# )
+table = app.Table(
+    "transformed_stations",
+    default=TransformedStation,
+    partitions=1,
+    changelog_topic=transformed_stations_topic,
+)
 
 
 @app.agent(stations_topic)
@@ -54,12 +54,10 @@ async def map_stations(stations):
         if (green):
             return 'green'
 
-    async for station in stations:
-        await transformed_stations_topic.send(value=TransformedStation(
+    async for station in stations.group_by(Station.station_id):
+        table[station.station_id] = TransformedStation(
             station_id=station.station_id, station_name=station.station_name,
             order=station.order, line=map_colors_to_line(station.red, station.blue, station.green))
-        )
-
 
 if __name__ == "__main__":
     app.main()

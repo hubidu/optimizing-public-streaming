@@ -39,7 +39,8 @@ class Line:
             if prev_station is not None:
                 prev_station.handle_departure(prev_dir)
             else:
-                logger.debug("unable to handle previous station due to missing station")
+                logger.debug(
+                    "unable to handle previous station due to missing station")
         else:
             logger.debug(
                 "unable to handle previous station due to missing previous info"
@@ -51,21 +52,22 @@ class Line:
             logger.debug("unable to handle message due to missing station")
             return
         station.handle_arrival(
-            value.get("direction"), value.get("train_id"), value.get("train_status")
+            value.get("direction"), value.get(
+                "train_id"), value.get("train_status")
         )
 
     def process_message(self, message):
         """Given a kafka message, extract data"""
-        # TODO: Based on the message topic, call the appropriate handler.
-        if True: # Set the conditional correctly to the stations Faust Table
+        if message.topic() == "cta.db.stations_transformed":  # Set the conditional correctly to the stations Faust Table
             try:
                 value = json.loads(message.value())
                 self._handle_station(value)
             except Exception as e:
                 logger.fatal("bad station? %s, %s", value, e)
-        elif True: # Set the conditional to the arrival topic
+        elif message.topic().startswith("cta.arrivals."):  # Set the conditional to the arrival topic
             self._handle_arrival(message)
-        elif True: # Set the conditional to the KSQL Turnstile Summary Topic
+        # Set the conditional to the KSQL Turnstile Summary Topic
+        elif message.topic() == "cta.turnstiles-summary":
             json_data = json.loads(message.value())
             station_id = json_data.get("STATION_ID")
             station = self.stations.get(station_id)
