@@ -4,6 +4,6 @@
   "type": "record",
   "fields": [
     { "name": "temperature", "type": "double" },
-    { "name": "status", "type": "int" }
+    { "name": "status", "type": "string" }
   ]
 }

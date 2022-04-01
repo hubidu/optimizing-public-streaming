@@ -29,12 +29,12 @@ class TransformedStation(faust.Record):
     line: str
 
 
-app = faust.App("stations-stream",
+app = faust.App("cta.faust.stations-transformer",
                 broker="kafka://localhost:9092", store="memory://")
 
 stations_topic = app.topic("cta.db.stations", value_type=Station)
 transformed_stations_topic = app.topic(
-    "cta.db.stations_transformed", partitions=1, value_type=TransformedStation)
+    "cta.db.stations_transformed.table.v1", partitions=1, value_type=TransformedStation)
 
 table = app.Table(
     "transformed_stations",
@@ -53,8 +53,9 @@ async def map_stations(stations):
             return 'blue'
         if (green):
             return 'green'
+        return 'unknown'
 
-    async for station in stations.group_by(Station.station_id):
+    async for station in stations:
         table[station.station_id] = TransformedStation(
             station_id=station.station_id, station_name=station.station_name,
             order=station.order, line=map_colors_to_line(station.red, station.blue, station.green))

@@ -16,7 +16,7 @@ KSQL_STATEMENT = """
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE turnstile (
-    station_id varchar,
+    station_id int,
     station_name varchar,
     line integer
 ) WITH (
@@ -40,7 +40,7 @@ AS
 
 def execute_statement():
     """Executes the KSQL statement against the KSQL API"""
-    if topic_check.topic_exists("TURNSTILE_SUMMARY") is True:
+    if topic_check.topic_exists("cta.turnstiles-summary") is True:
         return
 
     logging.debug("executing ksql statement...")

@@ -49,7 +49,8 @@ class Line:
         station_id = value.get("station_id")
         station = self.stations.get(station_id)
         if station is None:
-            logger.debug("unable to handle message due to missing station")
+            logger.info(
+                f"unable to handle message due to missing station {station_id}")
             return
         station.handle_arrival(
             value.get("direction"), value.get(
@@ -58,13 +59,13 @@ class Line:
 
     def process_message(self, message):
         """Given a kafka message, extract data"""
-        if message.topic() == "cta.db.stations_transformed":  # Set the conditional correctly to the stations Faust Table
+        if "cta.db.stations_transformed" in message.topic():  # Set the conditional correctly to the stations Faust Table
             try:
                 value = json.loads(message.value())
                 self._handle_station(value)
             except Exception as e:
                 logger.fatal("bad station? %s, %s", value, e)
-        elif message.topic().startswith("cta.arrivals."):  # Set the conditional to the arrival topic
+        elif "cta.arrivals" in message.topic():  # Set the conditional to the arrival topic
             self._handle_arrival(message)
         # Set the conditional to the KSQL Turnstile Summary Topic
         elif message.topic() == "cta.turnstiles-summary":
@@ -72,7 +73,8 @@ class Line:
             station_id = json_data.get("STATION_ID")
             station = self.stations.get(station_id)
             if station is None:
-                logger.debug("unable to handle message due to missing station")
+                logger.info(
+                    f"Unable to handle message due to missing station {station_id}")
                 return
             station.process_message(json_data)
         else:

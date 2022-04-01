@@ -7,7 +7,7 @@ from confluent_kafka.avro import AvroConsumer
 from confluent_kafka.avro.serializer import SerializerError
 from tornado import gen
 
-from producers.config import Config
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ class KafkaConsumer:
         self.broker_properties = {
             'bootstrap.servers': Config.KAFKA_BOOTSTRAP_SERVERS,
             'group.id': 'myconsumer',
-            'auto.offset.reset': offset_earliest
         }
 
         if is_avro is True:
