@@ -25,7 +25,7 @@ CREATE TABLE turnstile (
     value_format='avro'
 );
 
-CREATE TABLE turnstile_summary 
+CREATE TABLE turnstile_summary
 WITH (
     kafka_topic='cta.turnstiles-summary',
     value_format='json'
@@ -56,8 +56,10 @@ def execute_statement():
         ),
     )
 
-    # Ensure that a 2XX status code was returned
-    resp.raise_for_status()
+    try:
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Error with KSQL POST request - {e}")
 
 
 if __name__ == "__main__":
